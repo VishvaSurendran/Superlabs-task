@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://superlabs-task.onrender.com/api';
 
 export const productApi = {
     getProducts: (query = '', page = 1) =>
