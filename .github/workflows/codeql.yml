@@ -1,0 +1,47 @@
+name: CodeQL Code Scan
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    - cron: '0 4 * * 1'   # weekly scan, Mondays 04:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # upload results to the Security tab
+      actions: read
+      packages: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Keep only the languages your repo uses. Options:
+        # actions, c-cpp, csharp, go, java-kotlin, javascript-typescript, python, ruby, swift
+        language: [ 'javascript-typescript', 'python' ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality   # use 'security-extended' for fewer, security-only results
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v4
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
