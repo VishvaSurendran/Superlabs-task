@@ -25,7 +25,7 @@ jobs:
       # 1) Generate SARIF report -> shows up in GitHub Security > Code scanning
       #    (Code scanning is free for public repos; private repos need GitHub Advanced Security)
       - name: Run Trivy (SARIF report)
-        uses: aquasecurity/trivy-action@0.33.1   # pin to a commit SHA for better security
+        uses: aquasecurity/trivy-action@0.35.0   # pin to a commit SHA for better security (see notes)
         with:
           scan-type: fs
           scan-ref: .
@@ -44,7 +44,7 @@ jobs:
 
       # 2) Human-readable table in the job log + fail the build on serious findings
       - name: Run Trivy (fail on HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: fs
           scan-ref: .
