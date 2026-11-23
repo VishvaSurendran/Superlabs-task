@@ -1,0 +1,55 @@
+name: Trivy Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * 1"   # weekly scan, Mondays 03:00 UTC (catches newly published CVEs)
+  workflow_dispatch:        # allows manual runs from the Actions tab
+
+permissions:
+  contents: read
+  security-events: write    # needed to upload results to the Security tab
+
+jobs:
+  trivy-scan:
+    name: Trivy filesystem scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 1) Generate SARIF report -> shows up in GitHub Security > Code scanning
+      #    (Code scanning is free for public repos; private repos need GitHub Advanced Security)
+      - name: Run Trivy (SARIF report)
+        uses: aquasecurity/trivy-action@0.33.1   # pin to a commit SHA for better security
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: CRITICAL,HIGH,MEDIUM
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-results.sarif
+          exit-code: "0"        # don't fail here; the gate is the next step
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        with:
+          sarif_file: trivy-results.sarif
+
+      # 2) Human-readable table in the job log + fail the build on serious findings
+      - name: Run Trivy (fail on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          format: table
+          exit-code: "1"        # fail the workflow if anything is found
